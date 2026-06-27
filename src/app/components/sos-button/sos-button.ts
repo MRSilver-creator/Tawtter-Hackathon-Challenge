@@ -1,9 +1,11 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { EmergencyService } from '../../services/emergency.service';
 import { EmergencyStatus } from '../../models/types';
+
+const CIRCUMFERENCE = 2 * Math.PI * 45;
 
 @Component({
   selector: 'app-sos-button',
@@ -16,7 +18,7 @@ import { EmergencyStatus } from '../../models/types';
           <svg viewBox="0 0 100 100">
             <circle class="bg" cx="50" cy="50" r="45" />
             <circle class="fg" cx="50" cy="50" r="45"
-              [style.stroke-dasharray]="2 * Math.PI * 45"
+              [style.stroke-dasharray]="CIRCUMFERENCE"
               [style.stroke-dashoffset]="countdownPercent" />
           </svg>
           <span class="countdown-number">{{ countdown }}</span>
@@ -146,19 +148,23 @@ import { EmergencyStatus } from '../../models/types';
   `]
 })
 export class SosButtonComponent implements OnInit, OnDestroy {
+  protected readonly CIRCUMFERENCE = CIRCUMFERENCE;
   status: EmergencyStatus = 'idle';
   isActive = false;
   countdown = 0;
-  countdownPercent = 565.48;
+  countdownPercent = 0;
   buttonLabel = 'SOS';
   showInput = false;
   description = '';
   isListening = false;
-  protected readonly Math = Math;
 
   private subs: Subscription[] = [];
+  private countdownInterval: ReturnType<typeof setInterval> | null = null;
 
-  constructor(private emergencyService: EmergencyService) {}
+  constructor(
+    private emergencyService: EmergencyService,
+    private ngZone: NgZone
+  ) {}
 
   ngOnInit(): void {
     this.subs.push(
@@ -167,13 +173,6 @@ export class SosButtonComponent implements OnInit, OnDestroy {
         this.isActive = em !== null && em.status !== 'resolved' && em.status !== 'cancelled';
         this.buttonLabel = em ? (em.status === 'resolved' ? 'SAFE' : 'SOS') : 'SOS';
         this.showInput = false;
-      })
-    );
-
-    this.subs.push(
-      this.emergencyService.countdown$.subscribe((c) => {
-        this.countdown = c;
-        this.countdownPercent = 565.48 * (1 - c / 3);
       })
     );
   }
@@ -187,11 +186,34 @@ export class SosButtonComponent implements OnInit, OnDestroy {
   sendSOS(): void {
     const desc = this.description.trim() || 'I need urgent help';
     this.showInput = false;
-    this.emergencyService.startCountdown(3).subscribe({
-      complete: () => {
-        this.emergencyService.activateSOS(desc);
-      }
-    });
+    this.description = '';
+    this.runCountdown(desc);
+  }
+
+  private runCountdown(description: string): void {
+    this.stopCountdown();
+    let remaining = 3;
+    this.countdown = remaining;
+    this.countdownPercent = 0;
+
+    this.countdownInterval = setInterval(() => {
+      remaining--;
+      this.ngZone.run(() => {
+        this.countdown = remaining;
+        this.countdownPercent = CIRCUMFERENCE * (1 - remaining / 3);
+        if (remaining <= 0) {
+          this.stopCountdown();
+          this.emergencyService.activateSOS(description);
+        }
+      });
+    }, 1000);
+  }
+
+  private stopCountdown(): void {
+    if (this.countdownInterval !== null) {
+      clearInterval(this.countdownInterval);
+      this.countdownInterval = null;
+    }
   }
 
   startVoice(): void {
@@ -225,6 +247,7 @@ export class SosButtonComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopCountdown();
     this.subs.forEach((s) => s.unsubscribe());
   }
 }

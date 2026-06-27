@@ -1,5 +1,5 @@
 import { Injectable, NgZone, OnDestroy } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { Emergency, EmergencyStatus, EmergencyType, EmergencyRecord, Responder, Severity, FIRST_AID_STEPS } from '../models/types';
 import { GeolocationService } from './geolocation.service';
 import { ResponderService } from './responder.service';
@@ -17,9 +17,6 @@ export class EmergencyService implements OnDestroy {
 
   private timelineSubject = new BehaviorSubject<{ label: string; time: number }[]>([]);
   timeline$ = this.timelineSubject.asObservable();
-
-  private countdownSubject = new BehaviorSubject<number>(0);
-  countdown$ = this.countdownSubject.asObservable();
 
   private firstAidSubject = new BehaviorSubject<string[]>([]);
   firstAid$ = this.firstAidSubject.asObservable();
@@ -256,31 +253,6 @@ export class EmergencyService implements OnDestroy {
       this.currentEmergency = { ...this.currentEmergency, address };
       this.emergencySubject.next(this.currentEmergency);
     }
-  }
-
-  startCountdown(durationSec = 3): Observable<number> {
-    return new Observable((sub) => {
-      let remaining = durationSec;
-      this.countdownSubject.next(remaining);
-      sub.next(remaining);
-
-      const interval = setInterval(() => {
-        remaining--;
-        this.ngZone.run(() => {
-          this.countdownSubject.next(remaining);
-          sub.next(remaining);
-          if (remaining <= 0) {
-            clearInterval(interval);
-            sub.complete();
-          }
-        });
-      }, 1000);
-
-      return () => {
-        clearInterval(interval);
-        this.countdownSubject.next(0);
-      };
-    });
   }
 
   ngOnDestroy(): void {
