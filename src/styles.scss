@@ -1,0 +1,78 @@
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0a0a0f;
+  color: white;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+.victim-marker .victim-pulse {
+  width: 24px;
+  height: 24px;
+  background: #ff1744;
+  border-radius: 50%;
+  box-shadow: 0 0 0 rgba(255, 23, 68, 0.6);
+  animation: marker-pulse 1.5s ease-in-out infinite;
+  border: 3px solid white;
+}
+
+@keyframes marker-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0.6); }
+  50% { box-shadow: 0 0 0 16px rgba(255, 23, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0); }
+}
+
+.responder-marker .responder-dot {
+  font-size: 1.5rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.user-marker .user-dot {
+  font-size: 1.4rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.leaflet-popup-content-wrapper {
+  background: rgba(0, 0, 0, 0.85) !important;
+  color: white !important;
+  backdrop-filter: blur(12px) !important;
+  border-radius: 12px !important;
+  font-size: 0.8rem;
+}
+
+.leaflet-popup-tip {
+  background: rgba(0, 0, 0, 0.85) !important;
+}
+
+.leaflet-control-zoom a {
+  background: rgba(0, 0, 0, 0.7) !important;
+  color: white !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.leaflet-control-zoom {
+  border: none !important;
+}
